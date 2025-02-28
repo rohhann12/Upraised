@@ -1,7 +1,6 @@
-
-// src/utils/codeGenerator.js
 const generateCodename = () => {
-    const prefixes = ['The', 'Project', 'Operation', 'Agent', 'Prototype'];
+    const prefixes = ['WOW', 'Project', 'hey', 'Agent', 'Prototype'];
+    // couldn't thing of much so had gpt write these nouns lol
     const nouns = [
         'Nightingale', 'Kraken', 'Shadow', 'Phoenix', 'Tempest',
         'Oracle', 'Specter', 'Titan', 'Vortex', 'Whisper',
@@ -15,8 +14,7 @@ const generateCodename = () => {
 };
 
 const generateSelfDestructCode = () => {
-    // Generate a 6-character alphanumeric code
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const characters = 'RohanWillGetanInteviewCall';
     let code = '';
 
     for (let i = 0; i < 6; i++) {
@@ -27,7 +25,7 @@ const generateSelfDestructCode = () => {
 };
 
 const generateMissionSuccessProbability = () => {
-    // Generate a random number between 30 and 98
+    
     return Math.floor(Math.random() * (98 - 30 + 1)) + 30;
 };
 

@@ -7,141 +7,137 @@ const {
 
 const prisma = new PrismaClient();
 
-const getAllGadgets = async (statusFilter) => {
-    const filter = statusFilter ? { where: { status: statusFilter } } : {};
+class gadgetService {
+    getAllGadgets = async (statusFilter) => {
+        const filter = statusFilter ? { where: { status: statusFilter } } : {};
 
-    const gadgets = await prisma.gadget.findMany({
-        ...filter,
-        orderBy: { updatedAt: 'desc' },
-    });
+        const gadgets = await prisma.gadget.findMany({
+            ...filter,
+            orderBy: { updatedAt: 'desc' },
+        });
 
-    // Add random mission success probability to each gadget
-    return gadgets.map(gadget => ({
-        ...gadget,
-        missionSuccessProbability: generateMissionSuccessProbability(),
-    }));
-};
-
-const getGadgetById = async (id) => {
-    const gadget = await prisma.gadget.findUnique({
-        where: { id },
-    });
-
-    if (!gadget) {
-        return null;
-    }
-
-    return {
-        ...gadget,
-        missionSuccessProbability: generateMissionSuccessProbability(),
+        // Add random mission success probability to each gadget
+        return gadgets.map(gadget => ({
+            ...gadget,
+            missionSuccessProbability: generateMissionSuccessProbability(),
+        }));
     };
-};
 
-const createGadget = async (gadgetData) => {
-    const codename = generateCodename();
+    getGadgetById = async (id) => {
+        const gadget = await prisma.gadget.findUnique({
+            where: { id },
+        });
 
-    return prisma.gadget.create({
-        data: {
-            ...gadgetData,
-            codename,
-        },
-    });
-};
+        if (!gadget) {
+            return null;
+        }
 
-const updateGadget = async (id, gadgetData) => {
-    // Make sure we're not trying to update the ID or codename
-    const { id: _, codename: __, ...updateData } = gadgetData;
+        return {
+            ...gadget,
+            missionSuccessProbability: generateMissionSuccessProbability(),
+        };
+    };
 
-    const gadget = await prisma.gadget.findUnique({
-        where: { id },
-    });
+    createGadget = async (gadgetData) => {
+        const codename = generateCodename();
 
-    if (!gadget) {
-        return null;
-    }
+        return prisma.gadget.create({
+            data: {
+                ...gadgetData,
+                codename,
+            },
+        });
+    };
 
-    return prisma.gadget.update({
-        where: { id },
-        data: updateData,
-    });
-};
+    updateGadget = async (id, gadgetData) => {
+        // Make sure we're not trying to update the ID or codename
+        const { id: _, codename: __, ...updateData } = gadgetData;
 
-const decommissionGadget = async (id) => {
-    const gadget = await prisma.gadget.findUnique({
-        where: { id },
-    });
+        const gadget = await prisma.gadget.findUnique({
+            where: { id },
+        });
 
-    if (!gadget) {
-        return null;
-    }
+        if (!gadget) {
+            return null;
+        }
 
-    return prisma.gadget.update({
-        where: { id },
-        data: {
-            status: 'Decommissioned',
-            decommissionedAt: new Date(),
-        },
-    });
-};
+        return prisma.gadget.update({
+            where: { id },
+            data: updateData,
+        });
+    };
 
-const generateSelfDestructSequence = async (gadgetId) => {
-    const gadget = await prisma.gadget.findUnique({
-        where: { id: gadgetId },
-    });
+    decommissionGadget = async (id) => {
+        const gadget = await prisma.gadget.findUnique({
+            where: { id },
+        });
 
-    if (!gadget || gadget.status !== 'Available') {
-        return null;
-    }
+        if (!gadget) {
+            return null;
+        }
 
-    // Generate a self-destruct code that expires in 5 minutes
-    const code = generateSelfDestructCode();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+        return prisma.gadget.update({
+            where: { id },
+            data: {
+                status: 'Decommissioned',
+                decommissionedAt: new Date(),
+            },
+        });
+    };
 
-    await prisma.selfDestructCode.create({
-        data: {
-            gadgetId,
-            code,
-            expiresAt,
-        },
-    });
+    generateSelfDestructSequence = async (gadgetId) => {
+        const gadget = await prisma.gadget.findUnique({
+            where: { id: gadgetId },
+        });
 
-    return { code, expiresAt };
-};
+        if (!gadget || gadget.status !== 'Available') {
+            return null;
+        }
 
-const executeSelfDestruct = async (gadgetId, code) => {
-    // Check if the code is valid and not expired
-    const selfDestructCode = await prisma.selfDestructCode.findFirst({
-        where: {
-            gadgetId,
-            code,
-            expiresAt: { gt: new Date() },
-            used: false,
-        },
-    });
+        // Generate a self-destruct code that expires in 5 minutes
+        const code = generateSelfDestructCode();
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    if (!selfDestructCode) {
-        return null;
-    }
+        await prisma.selfDestructCode.create({
+            data: {
+                gadgetId,
+                code,
+                expiresAt,
+            },
+        });
 
-    // Mark the code as used
-    await prisma.selfDestructCode.update({
-        where: { id: selfDestructCode.id },
-        data: { used: true },
-    });
+        return { code, expiresAt };
+    };
 
-    // Mark the gadget as destroyed
-    return prisma.gadget.update({
-        where: { id: gadgetId },
-        data: { status: 'Destroyed' },
-    });
-};
+    executeSelfDestruct = async (gadgetId, code) => {
+        // Check if the code is valid and not expired
+        const selfDestructCode = await prisma.selfDestructCode.findFirst({
+            where: {
+                gadgetId,
+                code,
+                expiresAt: { gt: new Date() },
+                used: false,
+            },
+        });
+
+        if (!selfDestructCode) {
+            return null;
+        }
+
+        // Mark the code as used
+        await prisma.selfDestructCode.update({
+            where: { id: selfDestructCode.id },
+            data: { used: true },
+        });
+
+        // Mark the gadget as destroyed
+        return prisma.gadget.update({
+            where: { id: gadgetId },
+            data: { status: 'Destroyed' },
+        });
+    };
+}
 
 module.exports = {
-    getAllGadgets,
-    getGadgetById,
-    createGadget,
-    updateGadget,
-    decommissionGadget,
-    generateSelfDestructSequence,
-    executeSelfDestruct
+    gadgetService
 };

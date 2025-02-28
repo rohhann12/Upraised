@@ -3,8 +3,6 @@ const { Prisma } = require('@prisma/client');
 
 const errorHandler = (err, req, res, next) => {
     console.error(err);
-
-    // Handle Prisma errors
     if (err instanceof Prisma.PrismaClientKnownRequestError) {
         switch (err.code) {
             case 'P2002':
@@ -22,7 +20,6 @@ const errorHandler = (err, req, res, next) => {
         }
     }
 
-    // Handle other errors
     if (err.name === 'UnauthorizedError') {
         return res.status(401).json(errorResponse('Unauthorized access', err));
     }
@@ -30,8 +27,7 @@ const errorHandler = (err, req, res, next) => {
     if (err.name === 'ValidationError') {
         return res.status(400).json(errorResponse('Validation error', err));
     }
-
-    // Default error handling
+    
     return res.status(500).json(
         errorResponse('Internal server error', process.env.NODE_ENV === 'development' ? err : undefined)
     );
